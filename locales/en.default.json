@@ -470,5 +470,14 @@
       "message": "Message",
       "max_characters": "{{ max_chars }} characters max"
     }
+  },
+  "bundles": {
+    "order_title": "Your Bundle",
+    "first_button": "START FROM SCRATCH",
+    "second_button": "EXPLORE SUGGESTED",
+    "order_button": "ADD TO CART",
+    "order_message": "*MINIMUM OF THREE ITEMS REQUIRED.",
+    "quantity_title": "ADD TO BUNDLE",
+    "final_message": "*MAXIMUM OF SIX ITEMS PER BUNDLE."
   }
 }
