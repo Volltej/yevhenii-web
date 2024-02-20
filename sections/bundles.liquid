@@ -1,0 +1,347 @@
+{%- liquid
+  assign m_field = collection.metafields.custom
+  assign bundle_discount = m_field.bundle_discount
+  assign bundle_value = bundle_discount | divided_by: 100.0
+  assign bundle_min_size = m_field.bundle_min_size
+  assign bundle_max_size = m_field.bundle_max_size
+  assign benefits_array = section.blocks | where: 'type', 'benefit' | map: 'settings'
+  assign steps_array = section.blocks | where: 'type', 'step' | map: 'settings'
+  assign s = section.settings
+  assign is_show = false
+  assign bundle_title = 'bundles.title' | t: value:bundle_discount
+
+  if s.title != blank
+    assign bundle_title = s.title
+  endif
+
+  if bundle_discount != blank and bundle_min_size != blank and bundle_max_size != blank
+    assign is_show = true
+  endif
+-%}
+
+{%- if is_show -%}
+  <div
+    class="bundles__wrapper"
+    data-section-id="{{- section.id -}}"
+    data-section-type="bundle"
+    data-min-size="{{- bundle_min_size -}}"
+    data-max-size="{{- bundle_max_size -}}"
+    data-discount-value="{{- bundle_discount -}}"
+  >
+    <link rel="stylesheet" href="{{- 'bundles.scss' | asset_url -}}" />
+    <style>
+      :root {
+        --bundle-size: {{- bundle_max_size -}};
+      }
+    </style>
+
+    <h1 class="bundles__title">
+      {{- bundle_title -}}
+    </h1>
+
+    {%- if steps_array != blank -%}
+      <div class="bundles__pagination">
+        {%- for pagination in steps_array -%}
+          {%- if pagination.step != blank -%}
+            <div>
+              <span>{{- forloop.index -}}</span>
+              <p>{{- pagination.step -}}</p>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+    <div class="bundles__inner">
+      <div class="bundles__content">
+        <div class="bundles__content-tabs">
+          <button
+            data-tab="{{- 'bundles.first_button' | t | handleize -}}"
+            class="js-toggle-collection-tab bundles__content-tab bundles__content-button--active"
+          >
+            {{- 'bundles.first_button' | t -}}
+          </button>
+          <button
+            data-tab="{{- 'bundles.second_button' | t | handleize -}}"
+            class="js-toggle-collection-tab bundles__content-tab"
+          >
+            {{- 'bundles.second_button' | t -}}
+          </button>
+        </div>
+        <div class="bundles__content-list">
+          <div
+            data-tab="{{- 'bundles.first_button' | t | handleize -}}"
+            class="bundles__content-list-item bundles__content-list-item--active bundles__content-list-item--normal"
+          >
+            {%- for product in collection.products -%}
+              <div class="bundles__product bundles__product-item">
+                <a class="bundles__product-image-wrapper" href="{{- product.url -}}">
+                  <img src="{{- product.featured_image | image_url: width: 400 -}}" alt="{{- product.featured_image.alt -}}">
+                </a>
+                <a class="bundles__product-title" href="{{- product.url -}}">
+                  {{- product.metafields.custom.bundle_title | default: product.title -}}
+                </a>
+                <p class="bundles__product-price">{{- product.price | money -}}</p>
+
+                {%- if product.metafields.custom.bundle_size_description -%}
+                  <p class="bundles__product-size">
+                    {{- product.metafields.custom.bundle_size_description -}}
+                  </p>
+                {%- endif -%}
+
+                {%- if product.metafields.custom.bundle_description -%}
+                  <p class="bundles__product-description">
+                    {{- product.metafields.custom.bundle_description -}}
+                  </p>
+                {%- endif -%}
+
+                <div
+                  data-product-size="1"
+                  class="js-toggle-quantity-picker bundles__quantity-picker-wrapper"
+                >
+                  {%- liquid
+                    assign button_price = product.price | money
+                    assign button_title = 'bundles.quantity_title' | t
+                  -%}
+
+                  <p class="bundles__quantity-picker-title">
+                    {{- button_title -}}
+                  </p>
+                  <div class="bundles__quantity-picker">
+                    <p data-product-id="{{- product.id -}}" class="js-remove-bundle-item bundles__quantity-picker-minus">-</p>
+                    <p data-product-id="{{- product.id -}}" class="bundles__quantity-picker-quantity">0</p>
+                    <p data-product-id="{{- product.id -}}" class="js-add-bundle-item bundles__quantity-picker-plus">+</p>
+                  </div>
+                </div>
+                <div class="bundles__product-markup">
+                  <div
+                    data-product-id="{{- product.id -}}"
+                    data-submit-id="{{- product.selected_or_first_available_variant.id -}}"
+                    data-product-price="{{- product.price -}}"
+                    class="bundles__product-order"
+                  >
+                    <a href="{{- product.url -}}">
+                      <img src="{{- product.featured_image | image_url: width: 400 -}}" alt="{{- product.title -}}">
+                    </a>
+                    <a class="bundles__product-markup-title" href="{{- product.url -}}">
+                      {{- product.metafields.custom.bundle_title | default: product.title -}}
+                    </a>
+                    <p class="bundles__product-markup-price">
+                      {%- assign discounted_price = product.price | times: bundle_value -%}
+
+                      <span class="bundles__product-markup-price-old">
+                        {{- product.price | money -}}
+                      </span>
+                      <span>
+                        {{- product.price | minus: discounted_price | money -}}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+          <div
+            data-tab="{{- 'bundles.second_button' | t | handleize -}}"
+            class="bundles__content-list-item bundles__content-list-item--pack"
+          >
+            {%- for item in m_field.bundle_item.value -%}
+              {%- liquid
+                assign pack_prices = item.product_item_list.value | map: 'price'
+                assign pack_ids = item.product_item_list.value | map: 'id' | join: ' '
+                assign pack_full_price = 0
+
+                for price in pack_prices
+                  assign pack_full_price = pack_full_price | plus: price
+                endfor
+
+                assign discounted_price = pack_full_price | times: bundle_value
+              -%}
+
+              <div class="bundles__product-pack bundles__product-item">
+                <div class="bundles__product-pack-content">
+                  <p class="bundles__product-pack-title">
+                    {{- item.title_list -}}
+                  </p>
+                  <div class="bundles__product-pack-description">
+                    <p>{{- item.description_list -}}</p>
+                    <div class="bundles__product-pack-price">
+                      <p class="bundles__product-pack-price-old">
+                        {{- pack_full_price | money -}}
+                      </p>
+                      <p>{{- pack_full_price | minus: discounted_price | money -}}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="bundles__product-pack-list">
+                  {%- for product in item.product_item_list.value -%}
+                    <div class="bundles__product-pack-list-item">
+                      <a href="{{- product.url -}}">
+                        <img src="{{- product.featured_image | image_url: width: 400 -}}" alt="{{- product.title -}}">
+                      </a>
+                      <a href="{{- product.url -}}">
+                        {{- product.metafields.custom.bundle_title | default: product.title -}}
+                      </a>
+                    </div>
+                  {%- endfor -%}
+                </div>
+                <div
+                  data-product-size="{{- pack_prices.size -}}"
+                  class="js-toggle-quantity-picker bundles__quantity-picker-pack bundles__quantity-picker-wrapper"
+                >
+                  <p class="bundles__quantity-picker-title">
+                    {{- 'bundles.quantity_title' | t -}}
+                  </p>
+                  <div class="bundles__quantity-picker">
+                    <p
+                      data-product-size="{{- pack_prices.size -}}"
+                      data-product-id="{{- pack_ids -}}"
+                      class="js-remove-bundle-item bundles__quantity-picker-minus">-</p>
+                    <p
+                      data-product-size="{{- pack_prices.size -}}"
+                      data-product-id="{{- pack_ids -}}"
+                      class="bundles__quantity-picker-quantity">0</p>
+                    <p
+                      data-product-size="{{- pack_prices.size -}}"
+                      data-product-id="{{- pack_ids -}}"
+                      class="js-add-bundle-item bundles__quantity-picker-plus bundles__quantity-picker-pack">+</p>
+                  </div>
+                </div>
+                <div class="bundles__product-markup">
+                  {%- for product in item.product_item_list.value -%}
+                    <div
+                      data-product-id="{{- pack_ids -}}"
+                      data-submit-id="{{- product.selected_or_first_available_variant.id -}}"
+                      data-product-price="{{- product.price -}}"
+                      class="bundles__product-order"
+                    >
+                      <a href="{{- product.url -}}">
+                        <img src="{{- product.featured_image | image_url: width: 400 -}}" alt="{{- product.title -}}">
+                      </a>
+                      <a class="bundles__product-markup-title" href="{{- product.url -}}">
+                        {{- product.metafields.custom.bundle_title | default: product.title -}}
+                      </a>
+                      <p class="bundles__product-markup-price">
+                        {%- assign discounted_price = product.price | times: bundle_value -%}
+
+                        <span class="bundles__product-markup-price-old">
+                          {{- product.price | money -}}
+                        </span>
+                        <span>
+                          {{- product.price | minus: discounted_price | money -}}
+                        </span>
+                      </p>
+                    </div>
+                  {%- endfor -%}
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+      </div>
+      <div class="bundles__order-list">
+        <div class="bundles__order-list-wrapper">
+          <div class="bundles__order-list__inner">
+            <p class="bundles__order-list-title">
+              {{- 'bundles.order_title' | t -}}
+            </p>
+            <div class="bundles__order-products">
+              {%- for i in (1..bundle_max_size) -%}
+                <div class="bundles__order-item">
+                  <div class="bundles__order-item-inner"></div>
+                  <p class="js-remove-bundle-item bundles__order-item-cross-button"></p>
+                </div>
+              {%- endfor -%}
+
+              <div class="bundles__order-buttons">
+                <p class="js-scroll-slider bundles__order-button bundles__order-button--left bundles__order-button--hidden">
+                  {%- render 'svg-icons', icon: 'bundle-slider-arrow' -%}
+                </p>
+                <p class="js-scroll-slider bundles__order-button bundles__order-button--right">
+                  {%- render 'svg-icons', icon: 'bundle-slider-arrow' -%}
+                </p>
+              </div>
+            </div>
+            <div class="bundles__order-button-wrapper">
+              <p class="bundles__order-message">
+                {{- 'bundles.order_message' | t -}}
+              </p>
+              <p class="bundles__order-message-final">
+                {{- 'bundles.final_message' | t -}}
+              </p>
+              <button class="js-add-to-cart-bundle bundles__order-button bundles__order-button--disabled">
+                {{- 'bundles.order_button' | t -}}
+                <span class="bundles__order-button-price"></span>
+              </button>
+            </div>
+          </div>
+
+          {%- if benefits_array != blank -%}
+            <div class="bundles__order-benefits">
+              {%- for benefit in benefits_array -%}
+                {%- if benefit.benefit_img != blank and benefit.benefit_description != blank -%}
+                  <div>
+                    <img src="{{- benefit.benefit_img | image_url: width: 400 -}}" alt="{{- benefit.benefit_img.alt -}}">
+                    <p>{{- benefit.benefit_description | newline_to_br -}}</p>
+                  </div>
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.1.0/uuidv4.min.js" defer></script>
+    <script src="{{- 'bundles.js' | asset_url -}}" defer></script>
+  </div>
+{%- endif -%}
+
+{% schema %}
+  {
+    "name": "Bundles",
+    "tag": "section",
+    "class": "bundles",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "step",
+        "name": "Step",
+        "settings": [
+          {
+            "type": "text",
+            "id": "step",
+            "label": "Step text"
+          }
+        ]
+      },
+      {
+        "type": "benefit",
+        "name": "Benefit",
+        "settings": [
+          {
+            "type": "image_picker",
+            "id": "benefit_img",
+            "label": "Image"
+          },
+          {
+            "type": "textarea",
+            "id": "benefit_description",
+            "label": "Description"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "Bundles"
+      }
+    ]
+  }
+{% endschema %}

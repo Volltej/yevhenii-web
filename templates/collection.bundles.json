@@ -1,0 +1,62 @@
+{
+  "sections": {
+    "bundles": {
+      "type": "bundles",
+      "blocks": {
+        "step_dGhwgd": {
+          "type": "step",
+          "settings": {
+            "step": "Pick 3+ samples"
+          }
+        },
+        "step_t86Lbp": {
+          "type": "step",
+          "settings": {
+            "step": "Add them to your cart"
+          }
+        },
+        "step_EHVYhJ": {
+          "type": "step",
+          "settings": {
+            "step": "Enjoy super savings"
+          }
+        },
+        "benefit_EbpaAP": {
+          "type": "benefit",
+          "settings": {
+            "benefit_img": "shopify:\/\/shop_images\/hydrationicons-06.png",
+            "benefit_description": "30 DAY HAPPINESS GUARANTEE"
+          }
+        },
+        "benefit_zXfghA": {
+          "type": "benefit",
+          "settings": {
+            "benefit_img": "shopify:\/\/shop_images\/hydrationicons-03.png",
+            "benefit_description": "SECURE & TRUSTED CHECKOUT"
+          }
+        },
+        "benefit_GEPnqb": {
+          "type": "benefit",
+          "settings": {
+            "benefit_img": "shopify:\/\/shop_images\/hydrationicons-01.png",
+            "benefit_description": "SHIPS IN 24BUSINESS HOURS"
+          }
+        }
+      },
+      "block_order": [
+        "step_dGhwgd",
+        "step_t86Lbp",
+        "step_EHVYhJ",
+        "benefit_EbpaAP",
+        "benefit_zXfghA",
+        "benefit_GEPnqb"
+      ],
+      "settings": {
+        "title": "Create Your Bundle And Save Up To {{ collection.metafields.custom.bundle_discount.value }}%"
+      }
+    }
+  },
+  "order": [
+    "bundles"
+  ]
+}
